@@ -1,11 +1,12 @@
+import pathlib
 from airflow.sdk import dag, task, Param
 from airflow.providers.common.sql.operators.sql import SQLExecuteQueryOperator
 
 @dag(
     params={
         "event_type": Param(
-            None,
-            type=['string', 'null'],
+            "",
+            type=['string'],
             enum=[
                 'Workshop',
                 'Webinar',
@@ -16,7 +17,8 @@ from airflow.providers.common.sql.operators.sql import SQLExecuteQueryOperator
                 'Symposium',
                 'Hackathon',
                 'Summit',
-                'Seminar'
+                'Seminar',
+                '',
                 ]
             )
         }
@@ -26,10 +28,16 @@ def templating():
 
     @task
     def read_file(path):
-        import pathlib
-
+        
+        print(path)
         print(pathlib.Path(path).read_text())
 
+
+    cwd = pathlib.Path(__file__).parent
+    
+    path = (cwd / "{{ dag.dag_id }}/file.txt").as_posix()
+    
+    read_file(path)
 
     query = """
 
@@ -55,10 +63,9 @@ def templating():
             "data": [1,2,3]
             }
         )
-    
-    path = "{{ dag.dag_id }}/file.txt"
-    
-    read_file(path) >>  sql_op >> sql_file_op
+
+    sql_op
+    sql_file_op
 
 
 templating()
